@@ -1,0 +1,24 @@
+{% extends "listings/base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto bg-white border border-gray-200 rounded-lg p-6 mt-10">
+    <h1 class="text-xl font-bold mb-4">Create your account</h1>
+    <p class="text-sm text-gray-500 mb-4">For property owners and boarding house providers.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="w-full bg-green-700 text-white rounded px-4 py-2 text-sm mt-2">
+            Sign up
+        </button>
+    </form>
+    <p class="text-sm text-gray-500 mt-4">
+        Already have an account? <a href="{% url 'listings:login' %}" class="text-green-700 underline">Log in</a>
+    </p>
+</div>
+{% endblock %}

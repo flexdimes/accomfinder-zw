@@ -1,0 +1,14 @@
+{% extends "listings/base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto bg-white border border-gray-200 rounded-lg p-6 mt-10 text-center">
+    <h1 class="text-lg font-bold mb-2">Delete this listing?</h1>
+    <p class="text-sm text-gray-500 mb-4">"{{ listing.title }}" will be permanently removed. This can't be undone.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex gap-3 justify-center">
+            <a href="{% url 'listings:my_listings' %}" class="border border-gray-300 rounded px-4 py-2 text-sm">Cancel</a>
+            <button type="submit" class="bg-red-600 text-white rounded px-4 py-2 text-sm">Delete</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

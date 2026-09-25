@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AccomFinder ZW{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <nav class="bg-green-700 text-white px-4 py-3 flex justify-between items-center">
+        <a href="{% url 'listings:home' %}" class="font-bold text-lg">AccomFinder ZW</a>
+        <div class="space-x-4 text-sm flex items-center">
+            <a href="{% url 'listings:listing_list' 'student' %}" class="hover:underline">Students</a>
+            <a href="{% url 'listings:listing_list' 'general' %}" class="hover:underline">General</a>
+            <a href="{% url 'listings:map_all' %}" class="hover:underline">Map</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'listings:create_listing' %}" class="bg-white text-green-700 px-3 py-1 rounded font-medium hover:bg-gray-100">Post a listing</a>
+                <a href="{% url 'listings:my_listings' %}" class="hover:underline">My listings</a>
+                <a href="{% url 'listings:logout' %}" class="hover:underline">Logout</a>
+            {% else %}
+                <a href="{% url 'listings:login' %}" class="hover:underline">Login</a>
+                <a href="{% url 'listings:signup' %}" class="bg-white text-green-700 px-3 py-1 rounded font-medium hover:bg-gray-100">List your property</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-6">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="bg-green-100 text-green-800 border border-green-300 rounded px-4 py-2 mb-4 text-sm">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

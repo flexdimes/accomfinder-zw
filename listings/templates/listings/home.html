@@ -1,0 +1,23 @@
+{% extends "listings/base.html" %}
+{% block content %}
+<div class="text-center py-16">
+    <h1 class="text-3xl font-bold mb-2">Find accommodation across Zimbabwe</h1>
+    <p class="text-gray-600 mb-10">Boarding houses for students. Rentals for everyone else.</p>
+
+    <div class="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <a href="{% url 'listings:listing_list' 'student' %}"
+           class="block bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition">
+            <div class="text-4xl mb-3">🎓</div>
+            <h2 class="text-xl font-semibold mb-1">I'm a Student</h2>
+            <p class="text-gray-500 text-sm">Boarding houses near your campus</p>
+        </a>
+
+        <a href="{% url 'listings:listing_list' 'general' %}"
+           class="block bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition">
+            <div class="text-4xl mb-3">🏠</div>
+            <h2 class="text-xl font-semibold mb-1">General Accommodation</h2>
+            <p class="text-gray-500 text-sm">Houses, flats and cottages to rent</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

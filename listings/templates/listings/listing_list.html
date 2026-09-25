@@ -1,0 +1,62 @@
+{% extends "listings/base.html" %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-4">
+    {% if category == "student" %}Student Boarding Houses{% else %}General Accommodation{% endif %}
+</h1>
+
+<!-- Filter bar -->
+<form method="get" class="bg-white border border-gray-200 rounded-lg p-4 mb-6 grid sm:grid-cols-4 gap-3">
+    <input type="text" name="city" placeholder="City (e.g. Harare)"
+           value="{{ request.GET.city|default:'' }}"
+           class="border border-gray-300 rounded px-3 py-2 text-sm">
+
+    {% if category == "student" %}
+    <input type="text" name="institution" placeholder="Institution (e.g. UZ)"
+           value="{{ request.GET.institution|default:'' }}"
+           class="border border-gray-300 rounded px-3 py-2 text-sm">
+    {% endif %}
+
+    <input type="number" name="max_price" placeholder="Max price"
+           value="{{ request.GET.max_price|default:'' }}"
+           class="border border-gray-300 rounded px-3 py-2 text-sm">
+
+    <select name="listing_type" class="border border-gray-300 rounded px-3 py-2 text-sm">
+        <option value="">Any type</option>
+        {% for value, label in listing_type_choices %}
+        <option value="{{ value }}" {% if request.GET.listing_type == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="bg-green-700 text-white rounded px-4 py-2 text-sm sm:col-span-4">
+        Search
+    </button>
+</form>
+
+<!-- Results -->
+<div class="grid sm:grid-cols-2 gap-4">
+    {% for listing in listings %}
+    <a href="{% url 'listings:listing_detail' listing.pk %}"
+       class="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition">
+        {% with listing.images.first as thumb %}
+        {% if thumb %}
+        <img src="{{ thumb.image.url }}" alt="{{ listing.title }}" class="h-40 w-full object-cover">
+        {% endif %}
+        {% endwith %}
+        <div class="p-4">
+        <div class="flex justify-between items-start">
+            <h2 class="font-semibold">{{ listing.title }}</h2>
+            {% if listing.is_verified %}
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Verified</span>
+            {% endif %}
+        </div>
+        <p class="text-sm text-gray-500">{{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}</p>
+        <p class="text-lg font-bold mt-2">${{ listing.price }} <span class="text-sm font-normal text-gray-500">{{ listing.get_price_period_display }}</span></p>
+        </div>
+    </a>
+    {% empty %}
+    <p class="text-gray-500 col-span-2">No listings match your search yet.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

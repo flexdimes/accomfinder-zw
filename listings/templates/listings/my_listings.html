@@ -1,0 +1,36 @@
+{% extends "listings/base.html" %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">My listings</h1>
+    <a href="{% url 'listings:create_listing' %}" class="bg-green-700 text-white rounded px-4 py-2 text-sm">
+        + Post a listing
+    </a>
+</div>
+
+<div class="grid sm:grid-cols-2 gap-4">
+    {% for listing in listings %}
+    <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <div class="flex justify-between items-start">
+            <h2 class="font-semibold">{{ listing.title }}</h2>
+            {% if not listing.is_active %}
+            <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Inactive</span>
+            {% elif listing.is_verified %}
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Verified</span>
+            {% else %}
+            <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Pending verification</span>
+            {% endif %}
+        </div>
+        <p class="text-sm text-gray-500">{{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}</p>
+        <p class="text-lg font-bold mt-1">${{ listing.price }} <span class="text-sm font-normal text-gray-500">{{ listing.get_price_period_display }}</span></p>
+
+        <div class="flex gap-3 mt-3 text-sm">
+            <a href="{% url 'listings:listing_detail' listing.pk %}" class="text-gray-600 underline">View</a>
+            <a href="{% url 'listings:edit_listing' listing.pk %}" class="text-green-700 underline">Edit</a>
+            <a href="{% url 'listings:delete_listing' listing.pk %}" class="text-red-600 underline">Delete</a>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-500 col-span-2">You haven't posted any listings yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "listings/base.html" %}
+{% block content %}
+
+{% if listing.latitude and listing.longitude %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+{% endif %}
+
+<a href="{% url 'listings:listing_list' listing.category %}" class="text-sm text-green-700">&larr; Back to listings</a>
+
+<div class="bg-white border border-gray-200 rounded-lg p-6 mt-4">
+    <div class="flex justify-between items-start">
+        <h1 class="text-2xl font-bold">{{ listing.title }}</h1>
+        {% if listing.is_verified %}
+        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Verified</span>
+        {% endif %}
+    </div>
+
+    {% if listing.images.all %}
+    <div class="grid grid-cols-3 gap-2 mt-4">
+        {% for img in listing.images.all %}
+        <img src="{{ img.image.url }}" alt="{{ listing.title }}" class="rounded-lg object-cover h-32 w-full">
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <p class="text-gray-500 mt-4">{{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}</p>
+    {% if listing.nearest_institution %}
+    <p class="text-sm text-gray-500">Near {{ listing.nearest_institution }}</p>
+    {% endif %}
+
+    <p class="text-2xl font-bold mt-4">${{ listing.price }} <span class="text-sm font-normal text-gray-500">{{ listing.get_price_period_display }}</span></p>
+
+    <p class="mt-4 text-gray-700">{{ listing.description }}</p>
+
+    <div class="mt-4 flex gap-2 text-sm text-gray-600">
+        <span class="bg-gray-100 px-2 py-1 rounded">{{ listing.get_listing_type_display }}</span>
+        {% if listing.meals_included %}<span class="bg-gray-100 px-2 py-1 rounded">Meals included</span>{% endif %}
+        {% if listing.pets_allowed %}<span class="bg-gray-100 px-2 py-1 rounded">Pets allowed</span>{% endif %}
+        {% if listing.utilities_included %}<span class="bg-gray-100 px-2 py-1 rounded">Utilities included</span>{% endif %}
+    </div>
+
+    <a href="{{ listing.whatsapp_link }}" target="_blank"
+       class="inline-block mt-6 bg-green-600 text-white px-5 py-3 rounded-lg font-medium">
+        Contact on WhatsApp
+    </a>
+
+    {% if listing.latitude and listing.longitude %}
+    <div class="mt-6">
+        <h3 class="text-sm font-medium mb-2">Location</h3>
+        <div id="mini-map" class="rounded-lg border border-gray-200" style="height: 250px;"></div>
+    </div>
+    <script>
+        const miniMap = L.map('mini-map').setView([{{ listing.latitude }}, {{ listing.longitude }}], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>, &copy; OpenStreetMap contributors',
+            maxZoom: 19,
+            subdomains: 'abcd',
+        }).addTo(miniMap);
+        L.marker([{{ listing.latitude }}, {{ listing.longitude }}]).addTo(miniMap);
+    </script>
+    {% endif %}
+</div>
+
+{% endblock %}

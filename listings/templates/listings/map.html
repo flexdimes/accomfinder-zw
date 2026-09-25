@@ -1,0 +1,53 @@
+{% extends "listings/base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">
+        Map view
+        {% if category == "student" %}— Student Boarding{% elif category == "general" %}— General{% endif %}
+    </h1>
+    <div class="text-sm space-x-3">
+        <a href="{% url 'listings:map_all' %}" class="{% if not category %}font-bold underline{% endif %}">All</a>
+        <a href="{% url 'listings:map_category' 'student' %}" class="{% if category == 'student' %}font-bold underline{% endif %}">Students</a>
+        <a href="{% url 'listings:map_category' 'general' %}" class="{% if category == 'general' %}font-bold underline{% endif %}">General</a>
+    </div>
+</div>
+
+<p class="text-sm text-gray-500 mb-3">{{ listing_count }} listing{{ listing_count|pluralize }} shown on map.</p>
+
+<div id="map" class="w-full rounded-lg border border-gray-200" style="height: 500px;"></div>
+
+<script>
+    const pins = {{ pins_json|safe }};
+
+    // Center on Harare by default; if there are pins, center on the first one.
+    const defaultCenter = [-17.8292, 31.0522];
+    const center = pins.length ? [pins[0].lat, pins[0].lng] : defaultCenter;
+
+    const map = L.map('map').setView(center, pins.length ? 12 : 7);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>, &copy; OpenStreetMap contributors',
+        maxZoom: 19,
+        subdomains: 'abcd',
+    }).addTo(map);
+
+    pins.forEach(function (pin) {
+        const marker = L.marker([pin.lat, pin.lng]).addTo(map);
+        const verifiedBadge = pin.verified
+            ? '<span style="color:#15803d;font-size:12px;">Verified</span><br>'
+            : '';
+        marker.bindPopup(
+            '<strong>' + pin.title + '</strong><br>' +
+            verifiedBadge +
+            pin.city + '<br>' +
+            '$' + pin.price + ' ' + pin.price_period + '<br>' +
+            '<a href="' + pin.url + '" style="color:#15803d;">View listing &rarr;</a>'
+        );
+    });
+</script>
+
+{% endblock %}
