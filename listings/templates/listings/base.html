@@ -17,7 +17,10 @@
             {% if user.is_authenticated %}
                 <a href="{% url 'listings:create_listing' %}" class="bg-white text-green-700 px-3 py-1 rounded font-medium hover:bg-gray-100">Post a listing</a>
                 <a href="{% url 'listings:my_listings' %}" class="hover:underline">My listings</a>
-                <a href="{% url 'listings:logout' %}" class="hover:underline">Logout</a>
+                <form action="{% url 'listings:logout' %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="hover:underline bg-transparent border-none p-0 text-white cursor-pointer">Logout</button>
+                </form>
             {% else %}
                 <a href="{% url 'listings:login' %}" class="hover:underline">Login</a>
                 <a href="{% url 'listings:signup' %}" class="bg-white text-green-700 px-3 py-1 rounded font-medium hover:bg-gray-100">List your property</a>
