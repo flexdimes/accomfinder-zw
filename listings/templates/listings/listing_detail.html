@@ -31,6 +31,16 @@
 
     <p class="text-2xl font-bold mt-4">${{ listing.price }} <span class="text-sm font-normal text-gray-500">{{ listing.get_price_period_display }}</span></p>
 
+    {% if listing.spots_left is not None %}
+    <p class="mt-2 text-sm font-medium {% if listing.is_full %}text-red-600{% else %}text-green-700{% endif %}">
+        {% if listing.is_full %}
+            This room is currently full ({{ listing.room_capacity }}/{{ listing.room_capacity }} spots taken)
+        {% else %}
+            {{ listing.spots_left }} spot{{ listing.spots_left|pluralize }} left out of {{ listing.room_capacity }}
+        {% endif %}
+    </p>
+    {% endif %}
+
     <p class="mt-4 text-gray-700">{{ listing.description }}</p>
 
     <div class="mt-4 flex gap-2 text-sm text-gray-600">
