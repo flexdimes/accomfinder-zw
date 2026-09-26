@@ -55,6 +55,16 @@ class Listing(models.Model):
         default="mixed",
     )
 
+    # Shared-room specific — how many people the room fits, and how many spots are taken
+    room_capacity = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Total number of people this room fits (only relevant for Shared Room listings)"
+    )
+    occupied_spots = models.PositiveIntegerField(
+        null=True, blank=True, default=0,
+        help_text="How many of those spots are currently taken"
+    )
+
     # General-specific
     pets_allowed = models.BooleanField(default=False)
     utilities_included = models.BooleanField(default=False)
@@ -77,6 +87,19 @@ class Listing(models.Model):
     @property
     def whatsapp_link(self):
         return f"https://wa.me/{self.contact_whatsapp}"
+
+    @property
+    def spots_left(self):
+        """Only meaningful for shared rooms with a capacity set. Returns None otherwise."""
+        if self.listing_type != "room_shared" or self.room_capacity is None:
+            return None
+        occupied = self.occupied_spots or 0
+        return max(self.room_capacity - occupied, 0)
+
+    @property
+    def is_full(self):
+        left = self.spots_left
+        return left is not None and left <= 0
 
 
 class ListingImage(models.Model):
