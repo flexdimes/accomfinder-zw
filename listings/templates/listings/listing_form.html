@@ -32,8 +32,26 @@
             <p id="coords-display" class="text-xs text-gray-500 mt-1">No location set yet.</p>
         </div>
 
+        {% if is_edit and listing.images.all %}
         <div class="mt-4">
-            <label class="block text-sm font-medium mb-1">Photos</label>
+            <label class="block text-sm font-medium mb-1">Current photos</label>
+            <p class="text-xs text-gray-400 mb-2">Tick a photo to remove it when you save.</p>
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {% for img in listing.images.all %}
+                <label class="relative block cursor-pointer group">
+                    <img src="{{ img.image.url }}" alt="" class="h-24 w-full object-cover rounded-lg">
+                    <div class="absolute inset-0 rounded-lg bg-black/0 group-has-[:checked]:bg-black/50 flex items-center justify-center transition">
+                        <span class="hidden group-has-[:checked]:block text-white text-xs font-medium">Will remove</span>
+                    </div>
+                    <input type="checkbox" name="delete_images" value="{{ img.id }}" class="absolute top-1 right-1 h-4 w-4">
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium mb-1">{% if is_edit %}Add more photos{% else %}Photos{% endif %}</label>
             <input type="file" name="images" multiple accept="image/*"
                    class="border border-gray-300 rounded px-3 py-2 text-sm w-full">
             <p class="text-xs text-gray-400 mt-1">You can select multiple photos at once.</p>
