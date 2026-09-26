@@ -5,6 +5,15 @@
     {% if category == "student" %}Student Boarding Houses{% else %}General Accommodation{% endif %}
 </h1>
 
+{% if near_institution %}
+<p class="text-sm text-gray-600 mb-4">
+    Showing listings within {{ radius_km|floatformat:0 }} km of <strong>{{ near_institution.name }}</strong>, closest first.
+    {% if listings_without_location_count > 0 %}
+    <span class="text-gray-400">({{ listings_without_location_count }} listing{{ listings_without_location_count|pluralize }} without a map location {{ listings_without_location_count|pluralize:"isn't,aren't" }} shown here.)</span>
+    {% endif %}
+</p>
+{% endif %}
+
 <!-- Filter bar -->
 <form method="get" class="bg-white border border-gray-200 rounded-lg p-4 mb-6 grid sm:grid-cols-4 gap-3">
     <input type="text" name="city" placeholder="City (e.g. Harare)"
@@ -12,9 +21,19 @@
            class="border border-gray-300 rounded px-3 py-2 text-sm">
 
     {% if category == "student" %}
-    <input type="text" name="institution" placeholder="Institution (e.g. UZ)"
-           value="{{ request.GET.institution|default:'' }}"
-           class="border border-gray-300 rounded px-3 py-2 text-sm">
+    <select name="near" class="border border-gray-300 rounded px-3 py-2 text-sm">
+        <option value="">Search near a campus (optional)</option>
+        {% for inst in institutions %}
+        <option value="{{ inst.name }}" {% if request.GET.near == inst.name %}selected{% endif %}>{{ inst.name }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="radius" class="border border-gray-300 rounded px-3 py-2 text-sm">
+        <option value="2" {% if request.GET.radius == "2" %}selected{% endif %}>Within 2 km</option>
+        <option value="5" {% if request.GET.radius == "5" or not request.GET.radius %}selected{% endif %}>Within 5 km</option>
+        <option value="10" {% if request.GET.radius == "10" %}selected{% endif %}>Within 10 km</option>
+        <option value="20" {% if request.GET.radius == "20" %}selected{% endif %}>Within 20 km</option>
+    </select>
     {% endif %}
 
     <input type="number" name="max_price" placeholder="Max price"
@@ -51,6 +70,9 @@
             {% endif %}
         </div>
         <p class="text-sm text-gray-500">{{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}</p>
+        {% if near_institution %}
+        <p class="text-xs text-blue-700 font-medium mt-0.5">{{ listing.distance_km }} km from {{ near_institution.name }}</p>
+        {% endif %}
         {% if listing.spots_left is not None %}
         <p class="text-xs mt-1 {% if listing.is_full %}text-red-600{% else %}text-green-700{% endif %} font-medium">
             {% if listing.is_full %}Room full{% else %}{{ listing.spots_left }} spot{{ listing.spots_left|pluralize }} left of {{ listing.room_capacity }}{% endif %}
