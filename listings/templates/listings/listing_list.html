@@ -51,6 +51,11 @@
             {% endif %}
         </div>
         <p class="text-sm text-gray-500">{{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}</p>
+        {% if listing.spots_left is not None %}
+        <p class="text-xs mt-1 {% if listing.is_full %}text-red-600{% else %}text-green-700{% endif %} font-medium">
+            {% if listing.is_full %}Room full{% else %}{{ listing.spots_left }} spot{{ listing.spots_left|pluralize }} left of {{ listing.room_capacity }}{% endif %}
+        </p>
+        {% endif %}
         <p class="text-lg font-bold mt-2">${{ listing.price }} <span class="text-sm font-normal text-gray-500">{{ listing.get_price_period_display }}</span></p>
         </div>
     </a>
