@@ -52,10 +52,9 @@
     </div>
     <script>
         const miniMap = L.map('mini-map').setView([{{ listing.latitude }}, {{ listing.longitude }}], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>, &copy; OpenStreetMap contributors',
+        L.tileLayer('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key={{ maptiler_key }}', {
+            attribution: '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>',
             maxZoom: 19,
-            subdomains: 'abcd',
         }).addTo(miniMap);
         L.marker([{{ listing.latitude }}, {{ listing.longitude }}]).addTo(miniMap);
     </script>
