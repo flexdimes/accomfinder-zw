@@ -100,8 +100,17 @@ def edit_listing(request, pk):
         form = ListingForm(request.POST, instance=listing)
         if form.is_valid():
             form.save()
+
+            # Remove any existing photos the provider checked for deletion
+            image_ids_to_delete = request.POST.getlist("delete_images")
+            if image_ids_to_delete:
+                for img in listing.images.filter(id__in=image_ids_to_delete):
+                    img.image.delete(save=False)  # removes the actual file (Cloudinary or local)
+                    img.delete()
+
             for image_file in request.FILES.getlist("images"):
                 ListingImage.objects.create(listing=listing, image=image_file)
+
             messages.success(request, "Listing updated.")
             return redirect("listings:my_listings")
     else:
