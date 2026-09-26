@@ -12,7 +12,7 @@
 
         <div class="grid sm:grid-cols-2 gap-4">
             {% for field in form %}
-            {% if field.name != "latitude" and field.name != "longitude" %}
+            {% if field.name != "latitude" and field.name != "longitude" and field.name != "room_capacity" and field.name != "occupied_spots" %}
             <div class="{% if field.name == 'description' %}sm:col-span-2{% endif %} mb-1">
                 <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
                 {{ field }}
@@ -21,6 +21,21 @@
             </div>
             {% endif %}
             {% endfor %}
+        </div>
+
+        <div id="shared-room-fields" class="grid sm:grid-cols-2 gap-4 mt-4 hidden">
+            <div class="mb-1">
+                <label class="block text-sm font-medium mb-1">{{ form.room_capacity.label }}</label>
+                {{ form.room_capacity }}
+                <p class="text-xs text-gray-400 mt-1">{{ form.room_capacity.help_text }}</p>
+                {% for error in form.room_capacity.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="mb-1">
+                <label class="block text-sm font-medium mb-1">{{ form.occupied_spots.label }}</label>
+                {{ form.occupied_spots }}
+                <p class="text-xs text-gray-400 mt-1">{{ form.occupied_spots.help_text }}</p>
+                {% for error in form.occupied_spots.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+            </div>
         </div>
 
         <div class="mt-4">
@@ -64,6 +79,20 @@
 </div>
 
 <script>
+    // Show the room capacity/occupancy fields only when "Shared Room" is selected
+    const listingTypeSelect = document.getElementById('id_listing_type');
+    const sharedRoomFields = document.getElementById('shared-room-fields');
+
+    function toggleSharedRoomFields() {
+        if (listingTypeSelect.value === 'room_shared') {
+            sharedRoomFields.classList.remove('hidden');
+        } else {
+            sharedRoomFields.classList.add('hidden');
+        }
+    }
+    toggleSharedRoomFields();
+    listingTypeSelect.addEventListener('change', toggleSharedRoomFields);
+
     const latInput = document.getElementById('id_latitude');
     const lngInput = document.getElementById('id_longitude');
     const coordsDisplay = document.getElementById('coords-display');
