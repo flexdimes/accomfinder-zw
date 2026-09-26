@@ -45,6 +45,13 @@ if DEBUG:
 # is exactly what you want for local development.
 USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL'))
 
+# Free map tiles (used on the Map page, the location picker, and listing detail pages).
+# Get a free key at https://cloud.maptiler.com — the free tier (100,000 map loads/month)
+# is far more than a small app like this needs, and unlike some "free, no key needed"
+# tile services, this one won't suddenly start blocking requests since it's their actual
+# business model rather than a side offering.
+MAPTILER_API_KEY = os.environ.get('MAPTILER_API_KEY', '')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -82,6 +89,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'listings.context_processors.maptiler_key',
             ],
         },
     },
