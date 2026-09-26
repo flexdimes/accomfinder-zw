@@ -29,6 +29,7 @@ class ListingForm(forms.ModelForm):
             "latitude", "longitude",
             "price", "price_period",
             "meals_included", "gender_specific",
+            "room_capacity", "occupied_spots",
             "pets_allowed", "utilities_included",
             "contact_whatsapp",
         ]
@@ -36,6 +37,10 @@ class ListingForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 4}),
             "latitude": forms.HiddenInput(),
             "longitude": forms.HiddenInput(),
+        }
+        labels = {
+            "room_capacity": "Total people the room fits",
+            "occupied_spots": "Spots already taken",
         }
 
     def __init__(self, *args, **kwargs):
