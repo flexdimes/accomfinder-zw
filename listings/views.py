@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Listing, ListingImage
 from .forms import ListingForm, ListingImageForm, StyledSignupForm
+from .institutions import INSTITUTIONS, get_institution
+from .distance import distance_km
 
 
 def home(request):
@@ -33,16 +35,45 @@ def listing_list(request, category):
     if listing_type:
         listings = listings.filter(listing_type=listing_type)
 
-    # Student-only filter
+    near_institution = None
+    radius_km = None
+    listings_without_location_count = 0
+
+    # Student-only: search by distance from a chosen campus
     if category == "student":
-        institution = request.GET.get("institution")
-        if institution:
-            listings = listings.filter(nearest_institution__icontains=institution)
+        near_name = request.GET.get("near")
+        if near_name:
+            near_institution = get_institution(near_name)
+
+        if near_institution:
+            radius_km = float(request.GET.get("radius", 10))
+
+            with_location = [l for l in listings if l.latitude is not None and l.longitude is not None]
+            listings_without_location_count = listings.count() - len(with_location)
+
+            nearby = []
+            for listing in with_location:
+                d = distance_km(near_institution["lat"], near_institution["lng"], listing.latitude, listing.longitude)
+                if d <= radius_km:
+                    listing.distance_km = round(d, 1)
+                    nearby.append(listing)
+
+            nearby.sort(key=lambda l: l.distance_km)
+            listings = nearby
+        else:
+            # Fall back to the old free-text match when no campus is chosen from the dropdown
+            institution_text = request.GET.get("institution")
+            if institution_text:
+                listings = listings.filter(nearest_institution__icontains=institution_text)
 
     context = {
         "listings": listings,
         "category": category,
         "listing_type_choices": Listing.LISTING_TYPE_CHOICES,
+        "institutions": INSTITUTIONS,
+        "near_institution": near_institution,
+        "radius_km": radius_km,
+        "listings_without_location_count": listings_without_location_count,
     }
     return render(request, "listings/listing_list.html", context)
 
