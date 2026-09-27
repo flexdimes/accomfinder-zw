@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Listing, ListingImage
+from .models import Listing, ListingImage, Review
 from .forms import ListingForm, ListingImageForm, StyledSignupForm
 from .institutions import INSTITUTIONS, get_institution
 from .distance import distance_km
@@ -80,7 +80,30 @@ def listing_list(request, category):
 
 def listing_detail(request, pk):
     listing = get_object_or_404(Listing, pk=pk, is_active=True)
-    return render(request, "listings/listing_detail.html", {"listing": listing})
+
+    user_review = None
+    can_review = False
+    if request.user.is_authenticated:
+        user_review = listing.reviews.filter(user=request.user).first()
+        can_review = request.user != listing.provider and user_review is None
+
+        if request.method == "POST" and can_review:
+            rating = request.POST.get("rating")
+            comment = request.POST.get("comment", "").strip()
+            if rating in [str(i) for i in range(1, 6)]:
+                Review.objects.create(listing=listing, user=request.user, rating=int(rating), comment=comment)
+                messages.success(request, "Thanks for your review!")
+                return redirect("listings:listing_detail", pk=listing.pk)
+            else:
+                messages.error(request, "Please choose a star rating between 1 and 5.")
+
+    context = {
+        "listing": listing,
+        "reviews": listing.reviews.select_related("user"),
+        "user_review": user_review,
+        "can_review": can_review,
+    }
+    return render(request, "listings/listing_detail.html", context)
 
 
 def signup(request):
