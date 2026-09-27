@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Listing, ListingImage
+from .models import Listing, ListingImage, Review
 
 
 class ListingImageInline(admin.TabularInline):
@@ -24,3 +24,10 @@ class ListingAdmin(admin.ModelAdmin):
     def mark_unverified(self, request, queryset):
         updated = queryset.update(is_verified=False)
         self.message_user(request, f"{updated} listing(s) marked as not verified.")
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("listing", "user", "rating", "created_at")
+    list_filter = ("rating",)
+    search_fields = ("listing__title", "user__username", "comment")
