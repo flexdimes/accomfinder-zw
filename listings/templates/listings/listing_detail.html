@@ -16,6 +16,15 @@
         {% endif %}
     </div>
 
+    {% if listing.average_rating %}
+    <div class="flex items-center gap-1 mt-1">
+        <span class="text-yellow-500">
+            {% for i in "12345" %}{% if forloop.counter <= listing.average_rating_int %}★{% else %}☆{% endif %}{% endfor %}
+        </span>
+        <span class="text-sm text-gray-600">{{ listing.average_rating }} ({{ listing.review_count }} review{{ listing.review_count|pluralize }})</span>
+    </div>
+    {% endif %}
+
     {% if listing.images.all %}
     <div class="grid grid-cols-3 gap-2 mt-4">
         {% for img in listing.images.all %}
@@ -69,6 +78,53 @@
         L.marker([{{ listing.latitude }}, {{ listing.longitude }}]).addTo(miniMap);
     </script>
     {% endif %}
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg p-6 mt-4">
+    <h2 class="text-lg font-bold mb-4">Reviews {% if listing.review_count %}({{ listing.review_count }}){% endif %}</h2>
+
+    {% if can_review %}
+    <form method="post" class="mb-6 pb-6 border-b border-gray-100">
+        {% csrf_token %}
+        <label class="block text-sm font-medium mb-2">Your rating</label>
+        <div class="flex gap-3 mb-3">
+            {% for i in "12345" %}
+            <label class="flex items-center gap-1 cursor-pointer">
+                <input type="radio" name="rating" value="{{ forloop.counter }}" required class="cursor-pointer">
+                <span class="text-sm">{{ forloop.counter }}★</span>
+            </label>
+            {% endfor %}
+        </div>
+        <textarea name="comment" rows="3" placeholder="Share your experience (optional)"
+                  class="border border-gray-300 rounded px-3 py-2 text-sm w-full"></textarea>
+        <button type="submit" class="bg-green-700 text-white rounded px-4 py-2 text-sm mt-3">
+            Submit review
+        </button>
+    </form>
+    {% elif user_review %}
+    <p class="text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">You've already reviewed this listing.</p>
+    {% elif not user.is_authenticated %}
+    <p class="text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
+        <a href="{% url 'listings:login' %}" class="text-green-700 underline">Log in</a> to leave a review.
+    </p>
+    {% endif %}
+
+    {% for review in reviews %}
+    <div class="mb-4 pb-4 {% if not forloop.last %}border-b border-gray-100{% endif %}">
+        <div class="flex items-center gap-2">
+            <span class="text-yellow-500 text-sm">
+                {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+            </span>
+            <span class="text-sm font-medium">{{ review.user.username }}</span>
+            <span class="text-xs text-gray-400">{{ review.created_at|date:"M Y" }}</span>
+        </div>
+        {% if review.comment %}
+        <p class="text-sm text-gray-700 mt-1">{{ review.comment }}</p>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p class="text-sm text-gray-500">No reviews yet — be the first to share your experience.</p>
+    {% endfor %}
 </div>
 
 {% endblock %}
