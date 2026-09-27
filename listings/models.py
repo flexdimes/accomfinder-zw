@@ -101,6 +101,21 @@ class Listing(models.Model):
         left = self.spots_left
         return left is not None and left <= 0
 
+    @property
+    def average_rating(self):
+        result = self.reviews.aggregate(models.Avg("rating"))["rating__avg"]
+        return round(result, 1) if result is not None else None
+
+    @property
+    def average_rating_int(self):
+        """Rounded to the nearest whole star, for rendering ★/☆ in templates."""
+        avg = self.average_rating
+        return round(avg) if avg is not None else 0
+
+    @property
+    def review_count(self):
+        return self.reviews.count()
+
 
 class ListingImage(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="images")
@@ -109,3 +124,20 @@ class ListingImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.listing.title}"
+
+
+class Review(models.Model):
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
+
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="reviews")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ("listing", "user")  # one review per person per listing
+
+    def __str__(self):
+        return f"{self.rating}\u2605 by {self.user.username} on {self.listing.title}"
