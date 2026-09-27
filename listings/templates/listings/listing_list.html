@@ -69,6 +69,9 @@
             <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Verified</span>
             {% endif %}
         </div>
+        {% if listing.average_rating %}
+        <p class="text-xs text-yellow-600 mt-0.5">★ {{ listing.average_rating }} ({{ listing.review_count }})</p>
+        {% endif %}
         <p class="text-sm text-gray-500">{{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}</p>
         {% if near_institution %}
         <p class="text-xs text-blue-700 font-medium mt-0.5">{{ listing.distance_km }} km from {{ near_institution.name }}</p>
