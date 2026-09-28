@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Listing, ListingImage, Review
+from .models import Listing, ListingImage, Review, Conversation, Message
 
 
 class ListingImageInline(admin.TabularInline):
@@ -31,3 +31,17 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ("listing", "user", "rating", "created_at")
     list_filter = ("rating",)
     search_fields = ("listing__title", "user__username", "comment")
+
+
+class MessageInline(admin.TabularInline):
+    model = Message
+    extra = 0
+    readonly_fields = ("sender", "text", "created_at", "is_read")
+    can_delete = True
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ("listing", "seeker", "created_at")
+    search_fields = ("listing__title", "seeker__username")
+    inlines = [MessageInline]
