@@ -3,7 +3,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Listing, ListingImage, Review
+from django.http import JsonResponse
+from django.db.models import Q
+from .models import Listing, ListingImage, Review, Conversation, Message
 from .forms import ListingForm, ListingImageForm, StyledSignupForm
 from .institutions import INSTITUTIONS, get_institution
 from .distance import distance_km
@@ -214,3 +216,91 @@ def map_view(request, category=None):
         "listing_count": len(pins),
     }
     return render(request, "listings/map.html", context)
+
+
+@login_required
+def start_conversation(request, pk):
+    """Seeker clicks 'Message provider' on a listing — creates or resumes the thread."""
+    listing = get_object_or_404(Listing, pk=pk, is_active=True)
+
+    if request.user == listing.provider:
+        messages.error(request, "You can't message yourself about your own listing.")
+        return redirect("listings:listing_detail", pk=pk)
+
+    conversation, created = Conversation.objects.get_or_create(listing=listing, seeker=request.user)
+    return redirect("listings:conversation_detail", pk=conversation.pk)
+
+
+@login_required
+def conversation_list(request):
+    """Inbox: every conversation this user is part of, either as seeker or provider."""
+    conversations = Conversation.objects.filter(
+        Q(seeker=request.user) | Q(listing__provider=request.user)
+    ).select_related("listing", "seeker", "listing__provider")
+
+    conversations_with_extra = []
+    for c in conversations:
+        conversations_with_extra.append({
+            "conversation": c,
+            "other_party": c.other_party(request.user),
+            "last_message": c.last_message,
+            "unread_count": c.unread_count_for(request.user),
+        })
+
+    return render(request, "listings/conversation_list.html", {"conversations": conversations_with_extra})
+
+
+@login_required
+def conversation_detail(request, pk):
+    """The actual chat thread. Only the two participants (seeker and provider) may view or post."""
+    conversation = get_object_or_404(
+        Conversation.objects.select_related("listing", "seeker", "listing__provider"),
+        pk=pk,
+    )
+    if request.user != conversation.seeker and request.user != conversation.provider:
+        messages.error(request, "You don't have access to that conversation.")
+        return redirect("listings:conversation_list")
+
+    if request.method == "POST":
+        text = request.POST.get("text", "").strip()
+        if text:
+            Message.objects.create(conversation=conversation, sender=request.user, text=text)
+        return redirect("listings:conversation_detail", pk=pk)
+
+    # Mark the other person's messages as read now that this user has opened the thread
+    conversation.messages.exclude(sender=request.user).filter(is_read=False).update(is_read=True)
+
+    return render(request, "listings/conversation_detail.html", {
+        "conversation": conversation,
+        "other_party": conversation.other_party(request.user),
+        "chat_messages": conversation.messages.select_related("sender"),
+    })
+
+
+@login_required
+def poll_messages(request, pk):
+    """
+    JSON endpoint the chat page polls every few seconds for new messages,
+    so it feels live without needing websockets.
+    """
+    conversation = get_object_or_404(Conversation, pk=pk)
+    if request.user != conversation.seeker and request.user != conversation.provider:
+        return JsonResponse({"error": "forbidden"}, status=403)
+
+    after_id = request.GET.get("after", 0)
+    new_messages = conversation.messages.filter(id__gt=after_id).select_related("sender")
+
+    # Mark any of the other person's messages that just arrived as read, since the tab is open
+    new_messages.exclude(sender=request.user).update(is_read=True)
+
+    data = [
+        {
+            "id": m.id,
+            "sender": m.sender.username,
+            "is_mine": m.sender_id == request.user.id,
+            "text": m.text,
+            "time": m.created_at.strftime("%H:%M"),
+        }
+        for m in new_messages
+    ]
+    return JsonResponse({"messages": data})
