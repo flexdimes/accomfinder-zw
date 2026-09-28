@@ -141,3 +141,46 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.rating}\u2605 by {self.user.username} on {self.listing.title}"
+
+
+class Conversation(models.Model):
+    """One thread per (listing, seeker) pair — the provider is derived from the listing."""
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="conversations")
+    seeker = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conversations_as_seeker")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ("listing", "seeker")
+
+    def __str__(self):
+        return f"{self.seeker.username} <-> {self.listing.provider.username} about {self.listing.title}"
+
+    @property
+    def provider(self):
+        return self.listing.provider
+
+    def other_party(self, user):
+        """From this user's point of view, who are they talking to?"""
+        return self.listing.provider if user == self.seeker else self.seeker
+
+    def unread_count_for(self, user):
+        return self.messages.exclude(sender=user).filter(is_read=False).count()
+
+    @property
+    def last_message(self):
+        return self.messages.order_by("-created_at").first()
+
+
+class Message(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.text[:40]}"
