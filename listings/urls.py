@@ -20,6 +20,10 @@ urlpatterns = [
     path("listing/<int:pk>/delete/", views.delete_listing, name="delete_listing"),
 
     path("listing/<int:pk>/", views.listing_detail, name="listing_detail"),
+    path("listing/<int:pk>/message/", views.start_conversation, name="start_conversation"),
+    path("messages/", views.conversation_list, name="conversation_list"),
+    path("messages/<int:pk>/", views.conversation_detail, name="conversation_detail"),
+    path("messages/<int:pk>/poll/", views.poll_messages, name="poll_messages"),
     path("map/", views.map_view, name="map_all"),
     path("map/<str:category>/", views.map_view, name="map_category"),
     path("<str:category>/", views.listing_list, name="listing_list"),  # student or general
