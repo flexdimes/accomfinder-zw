@@ -90,6 +90,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'listings.context_processors.maptiler_key',
+                'listings.context_processors.unread_message_count',
             ],
         },
     },
