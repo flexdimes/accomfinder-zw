@@ -20,6 +20,12 @@
                 {% if user.is_authenticated %}
                     <a href="{% url 'listings:create_listing' %}" class="bg-white text-green-700 px-3 py-1 rounded font-medium hover:bg-gray-100">Post a listing</a>
                     <a href="{% url 'listings:my_listings' %}" class="hover:underline">My listings</a>
+                    <a href="{% url 'listings:conversation_list' %}" class="hover:underline relative">
+                        Messages
+                        {% if unread_message_count > 0 %}
+                        <span class="absolute -top-2 -right-4 bg-white text-green-700 text-xs font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">{{ unread_message_count }}</span>
+                        {% endif %}
+                    </a>
                     <form action="{% url 'listings:logout' %}" method="post" class="inline">
                         {% csrf_token %}
                         <button type="submit" class="hover:underline bg-transparent border-none p-0 text-white cursor-pointer">Logout</button>
@@ -49,6 +55,9 @@
             {% if user.is_authenticated %}
                 <a href="{% url 'listings:create_listing' %}" class="block bg-white text-green-700 px-3 py-2 rounded font-medium text-center">Post a listing</a>
                 <a href="{% url 'listings:my_listings' %}" class="block hover:underline">My listings</a>
+                <a href="{% url 'listings:conversation_list' %}" class="block hover:underline">
+                    Messages{% if unread_message_count > 0 %} <span class="bg-white text-green-700 text-xs font-bold rounded-full px-2 py-0.5 ml-1">{{ unread_message_count }}</span>{% endif %}
+                </a>
                 <form action="{% url 'listings:logout' %}" method="post">
                     {% csrf_token %}
                     <button type="submit" class="block w-full text-left hover:underline bg-transparent border-none p-0 text-white cursor-pointer">Logout</button>
