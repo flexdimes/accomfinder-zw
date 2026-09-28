@@ -1,0 +1,32 @@
+{% extends "listings/base.html" %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-4">Messages</h1>
+
+<div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+    {% for item in conversations %}
+    <a href="{% url 'listings:conversation_detail' item.conversation.pk %}"
+       class="block p-4 hover:bg-gray-50 transition">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="font-medium">{{ item.other_party.username }}</p>
+                <p class="text-xs text-gray-500">Re: {{ item.conversation.listing.title }}</p>
+                {% if item.last_message %}
+                <p class="text-sm text-gray-600 mt-1 truncate">
+                    {% if item.last_message.sender == request.user %}You: {% endif %}{{ item.last_message.text|truncatechars:60 }}
+                </p>
+                {% endif %}
+            </div>
+            {% if item.unread_count > 0 %}
+            <span class="bg-green-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
+                {{ item.unread_count }}
+            </span>
+            {% endif %}
+        </div>
+    </a>
+    {% empty %}
+    <p class="text-gray-500 p-4">No conversations yet. Message a provider from any listing page to start one.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

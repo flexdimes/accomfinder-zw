@@ -1,0 +1,116 @@
+{% extends "listings/base.html" %}
+{% block content %}
+
+<a href="{% url 'listings:conversation_list' %}" class="text-sm text-green-700">&larr; Back to messages</a>
+
+<div class="bg-white border border-gray-200 rounded-lg mt-4 flex flex-col" style="height: 70vh;">
+    <div class="p-4 border-b border-gray-100">
+        <p class="font-semibold">{{ other_party.username }}</p>
+        <a href="{% url 'listings:listing_detail' conversation.listing.pk %}" class="text-xs text-gray-500 hover:underline">
+            Re: {{ conversation.listing.title }}
+        </a>
+    </div>
+
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3">
+        {% for msg in chat_messages %}
+        <div class="flex {% if msg.sender == request.user %}justify-end{% else %}justify-start{% endif %}" data-message-id="{{ msg.id }}">
+            <div class="max-w-xs sm:max-w-sm rounded-lg px-3 py-2 {% if msg.sender == request.user %}bg-green-700 text-white{% else %}bg-gray-100 text-gray-900{% endif %}">
+                <p class="text-sm">{{ msg.text }}</p>
+                <p class="text-xs mt-1 {% if msg.sender == request.user %}text-green-100{% else %}text-gray-400{% endif %}">{{ msg.created_at|date:"H:i" }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-gray-400 text-center mt-8">No messages yet — say hello.</p>
+        {% endfor %}
+    </div>
+
+    <form id="message-form" method="post" class="p-3 border-t border-gray-100 flex gap-2">
+        {% csrf_token %}
+        <input type="text" id="message-input" name="text" placeholder="Type a message..." autocomplete="off"
+               class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+        <button type="submit" class="bg-green-700 text-white rounded px-4 py-2 text-sm">Send</button>
+    </form>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chat-messages');
+    const form = document.getElementById('message-form');
+    const input = document.getElementById('message-input');
+    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+    const conversationId = {{ conversation.pk }};
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    function lastMessageId() {
+        const bubbles = chatBox.querySelectorAll('[data-message-id]');
+        if (bubbles.length === 0) return 0;
+        return bubbles[bubbles.length - 1].dataset.messageId;
+    }
+
+    function appendMessage(msg) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex ' + (msg.is_mine ? 'justify-end' : 'justify-start');
+        wrapper.dataset.messageId = msg.id;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'max-w-xs sm:max-w-sm rounded-lg px-3 py-2 ' +
+            (msg.is_mine ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-900');
+
+        const text = document.createElement('p');
+        text.className = 'text-sm';
+        text.textContent = msg.text;
+
+        const time = document.createElement('p');
+        time.className = 'text-xs mt-1 ' + (msg.is_mine ? 'text-green-100' : 'text-gray-400');
+        time.textContent = msg.time;
+
+        bubble.appendChild(text);
+        bubble.appendChild(time);
+        wrapper.appendChild(bubble);
+        chatBox.appendChild(wrapper);
+    }
+
+    async function pollForNewMessages() {
+        try {
+            const response = await fetch(`/messages/${conversationId}/poll/?after=${lastMessageId()}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            if (data.messages && data.messages.length > 0) {
+                const wasAtBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 50;
+                data.messages.forEach(appendMessage);
+                if (wasAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        } catch (e) {
+            // Silent fail on a poll — will just try again next interval
+        }
+    }
+
+    setInterval(pollForNewMessages, 4000);
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        input.disabled = true;
+
+        try {
+            await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: `text=${encodeURIComponent(text)}`,
+            });
+            // Fetch immediately after sending so the new message appears right away
+            await pollForNewMessages();
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    });
+</script>
+
+{% endblock %}
